@@ -1,10 +1,9 @@
 {
-  "name": "react-data-grid",
-  "private": true,
+  "name": "react-data-grid-idc",
+  "version": "1.0.0",
   "description": "Data grid for React",
-  "main": "src/index.js",
+  "main": "packages/react-data-grid/dist/react-data-grid.js",
   "scripts": {
-    "docs": "gulp docs:create",
     "pretest": "npm run eslint",
     "test": "./node_modules/.bin/karma start ./config/karma.js --singleRun true --release true",
     "dev-test": "./node_modules/.bin/karma start ./config/karma.dev.js --singleRun false --debug true",
@@ -12,15 +11,11 @@
     "build": "webpack --config ./config/webpack.config.prod.js --release true",
     "dev-server": "node webpack-dev-server.js",
     "beforepublish": "lerna run beforepublish",
-    "eslint": "eslint -f unix packages/react-data-grid/src/** packages/react-data-grid-addons/src/** packages/common/**",
-    "fix-eslint": "eslint --fix -f unix packages/react-data-grid/src/** packages/react-data-grid-addons/src/** packages/common/**",
-    "lerna-publish": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./ci/publish/publish.ps1",
-    "web": "cd website && npm run start",
-    "web-publish": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./ci/publish/publish-web.ps1"
+    "eslint": "./node_modules/.bin/eslint -f unix packages/react-data-grid/src/** packages/react-data-grid-addons/src/**"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/adazzle/react-data-grid.git"
+    "url": "git://github.com/EvanSeguin/react-data-grid.git"
   },
   "keywords": [
     "react",
