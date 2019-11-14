@@ -11,6 +11,7 @@ import EditorPortal from "common/editors/EditorPortal";
 import { UpdateActions } from "common/constants";
 import { isKeyPrintable, isCtrlKeyHeldDown } from "common/utils/keyboardUtils";
 import {
+  getNextOrPrevEditableCell,
   getSelectedDimensions,
   getSelectedCellValue,
   getSelectedRow,
@@ -48,7 +49,8 @@ class InteractionMasks extends React.Component {
     cellNavigationMode: PropTypes.oneOf([
       CellNavigationMode.NONE,
       CellNavigationMode.LOOP_OVER_ROW,
-      CellNavigationMode.CHANGE_ROW
+      CellNavigationMode.CHANGE_ROW,
+      CellNavigationMode.LOOP_OVER_EDITABLE_CELLS
     ]).isRequired,
     eventBus: PropTypes.object.isRequired,
     contextMenu: PropTypes.element,
@@ -113,7 +115,20 @@ class InteractionMasks extends React.Component {
 
     if (isSelectedPositionChanged) {
       // Call event handlers if selected cell has changed
-      const { onCellSelected, onCellDeSelected } = this.props;
+      const {
+        cellNavigationMode,
+        onCellSelected,
+        onCellDeSelected
+      } = this.props;
+
+      if (
+        cellNavigationMode !== undefined &&
+        cellNavigationMode !== null &&
+        cellNavigationMode === CellNavigationMode.LOOP_OVER_EDITABLE_CELLS
+      ) {
+        if (this.isSelectedCellEditable()) this.openEditor();
+      }
+
       if (
         isFunction(onCellDeSelected) &&
         this.isCellWithinBounds(prevSelectedPosition)
@@ -160,6 +175,23 @@ class InteractionMasks extends React.Component {
       EventTypes.DRAG_ENTER,
       this.handleDragEnter
     );
+    this.unsubscribeRemoveCellSelections = eventBus.subscribe(
+      EventTypes.REMOVE_CELL_SELECTIONS,
+      this.removeCellSelections
+    );
+    this.unsubscribeStopEditingCurrentCell = eventBus.subscribe(
+      EventTypes.STOP_EDITING_CURRENT_CELL,
+      this.stopEditingCurrentCell
+    );
+    this.unsubscribeEditCurrentCell = eventBus.subscribe(
+      EventTypes.EDIT_CURRENT_CELL,
+      this.editCurrentCell
+    );
+
+    this.unsubscribeEditNextEditableCell = eventBus.subscribe(
+      EventTypes.EDIT_NEXT_EDITABLE_CELL,
+      this.editNextEditableCell
+    );
 
     if (enableCellAutoFocus && this.isFocusedOnBody()) {
       this.selectFirstCell();
@@ -172,6 +204,10 @@ class InteractionMasks extends React.Component {
     this.unsubscribeSelectUpdate();
     this.unsubscribeSelectEnd();
     this.unsubscribeDragEnter();
+    this.unsubscribeRemoveCellSelections();
+    this.unsubscribeStopEditingCurrentCell();
+    this.unsubscribeEditCurrentCell();
+    this.unsubscribeEditNextEditableCell();
   }
 
   getEditorPosition = () => {
@@ -441,12 +477,14 @@ class InteractionMasks extends React.Component {
       ArrowDown: {
         getNext: current => ({ ...current, rowIdx: current.rowIdx + 1 }),
         isCellAtBoundary: isCellAtBottomBoundary,
-        onHitBoundary: onHitBottomBoundary
+        onHitBoundary: onHitBottomBoundary,
+        action: "ArrowDown"
       },
       ArrowUp: {
         getNext: current => ({ ...current, rowIdx: current.rowIdx - 1 }),
         isCellAtBoundary: isCellAtTopBoundary,
-        onHitBoundary: onHitTopBoundary
+        onHitBoundary: onHitTopBoundary,
+        action: "ArrowUp"
       },
       ArrowRight: {
         getNext: current => ({ ...current, idx: current.idx + 1 }),
@@ -457,7 +495,8 @@ class InteractionMasks extends React.Component {
           if (isCellAtBottomBoundary(next)) {
             onHitBottomBoundary(next);
           }
-        }
+        },
+        action: "ArrowRight"
       },
       ArrowLeft: {
         getNext: current => ({ ...current, idx: current.idx - 1 }),
@@ -468,7 +507,8 @@ class InteractionMasks extends React.Component {
           if (isCellAtTopBoundary(next)) {
             onHitTopBoundary(next);
           }
-        }
+        },
+        action: "ArrowLeft"
       }
     };
     if (e.keyCode === keyCodes.Tab) {
@@ -500,19 +540,15 @@ class InteractionMasks extends React.Component {
   changeCellFromKeyAction(e, cellNavigationMode) {
     const currentPosition = this.state.selectedPosition;
     const keyNavAction = this.getKeyNavActionFromEvent(e);
-    const next = this.getNextSelectedCellPositionForKeyNavAction(
+
+    let next = this.getNextSelectedCellPositionForKeyNavAction(
       keyNavAction,
       currentPosition,
       cellNavigationMode
     );
+
     this.checkIsAtGridBoundary(keyNavAction, next);
     this.selectCell({ ...next });
-    console.log(
-      "EDITABLE: " +
-        this.isSelectedCellEditable() +
-        " CELL: " +
-        JSON.stringify(next)
-    );
   }
 
   changeSelectedRangeFromArrowKeyAction(e) {
@@ -539,14 +575,39 @@ class InteractionMasks extends React.Component {
     const { getNext } = keyNavAction;
     const nextPosition = getNext(currentPosition);
     const { columns, rowsCount } = this.props;
-    return getNextSelectedCellPosition(
-      {
-        columns,
-        rowsCount,
-        cellNavigationMode
-      },
-      nextPosition
-    );
+
+    if (cellNavigationMode === CellNavigationMode.LOOP_OVER_EDITABLE_CELLS) {
+      const { enableCellSelect, rowGetter, onCheckCellIsEditable } = this.props;
+
+      const direction =
+        keyNavAction === undefined ||
+        keyNavAction.action === undefined ||
+        keyNavAction.action === null ||
+        keyNavAction.action == "ArrowRight" ||
+        keyNavAction.action == "ArrowDown"
+          ? CellNavigationMode.NEXT_CELL
+          : CellNavigationMode.PREV_CELL;
+      const nextEditable = getNextOrPrevEditableCell(
+        { cellNavigationMode, direction, columns, rowsCount },
+        nextPosition,
+        enableCellSelect,
+        rowGetter,
+        onCheckCellIsEditable
+      );
+
+      if (nextEditable === undefined || nextEditable === null)
+        return currentPosition;
+      else return nextEditable;
+    } else {
+      return getNextSelectedCellPosition(
+        {
+          columns,
+          rowsCount,
+          cellNavigationMode
+        },
+        nextPosition
+      );
+    }
   }
 
   checkIsAtGridBoundary(keyNavAction, next) {
@@ -613,6 +674,46 @@ class InteractionMasks extends React.Component {
       }
       return prevState;
     }, callback);
+  };
+
+  removeCellSelections = () => {
+    // Reset the selected position
+    this.setState({ selectedPosition: { idx: -1, rowIdx: -1 } });
+  };
+
+  stopEditingCurrentCell = () => {
+    const { isEditorEnabled } = this.state;
+
+    // Close the editor
+    if (isEditorEnabled) {
+      this.closeEditor();
+    }
+  };
+
+  editCurrentCell = () => {
+    this.selectCell(this.state.selectedPosition, true);
+  };
+
+  editNextEditableCell = cell => {
+    const {
+      cellNavigationMode,
+      columns,
+      enableCellSelect,
+      rowsCount,
+      rowGetter,
+      onCheckCellIsEditable
+    } = this.props;
+    const direction = CellNavigationMode.NEXT_CELL;
+
+    const nextEditable = getNextOrPrevEditableCell(
+      { cellNavigationMode, direction, columns, rowsCount },
+      cell,
+      enableCellSelect,
+      rowGetter,
+      onCheckCellIsEditable
+    );
+
+    this.selectCell(nextEditable, true);
   };
 
   createSingleCellSelectedRange(cellPosition, isDragging) {

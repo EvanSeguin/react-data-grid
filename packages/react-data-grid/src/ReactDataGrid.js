@@ -1,26 +1,32 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { deprecate } from 'react-is-deprecated';
-import BaseGrid from './Grid';
-import CheckboxEditor from 'common/editors/CheckboxEditor';
-import RowUtils from './RowUtils';
-import { getColumn, getSize } from './ColumnUtils';
-import KeyCodes from './KeyCodes';
-import { isFunction } from 'common/utils';
-import SelectAll from './formatters/SelectAll';
-import { DEFINE_SORT } from 'common/cells/headerCells/SortableHeaderCell';
-const ColumnMetrics = require('./ColumnMetrics');
-import { CellNavigationMode, EventTypes, UpdateActions, HeaderRowType } from 'common/constants';
-import { EventBus } from './masks';
+import React from "react";
+import PropTypes from "prop-types";
+import { deprecate } from "react-is-deprecated";
+import BaseGrid from "./Grid";
+import CheckboxEditor from "common/editors/CheckboxEditor";
+import RowUtils from "./RowUtils";
+import { getColumn, getSize } from "./ColumnUtils";
+import KeyCodes from "./KeyCodes";
+import { isFunction } from "common/utils";
+import SelectAll from "./formatters/SelectAll";
+import { DEFINE_SORT } from "common/cells/headerCells/SortableHeaderCell";
+const ColumnMetrics = require("./ColumnMetrics");
+import {
+  CellNavigationMode,
+  EventTypes,
+  UpdateActions,
+  HeaderRowType
+} from "common/constants";
+import { EventBus } from "./masks";
 
-require('../../../themes/react-data-grid-core.css');
-require('../../../themes/react-data-grid-checkbox.css');
+require("../../../themes/react-data-grid-core.css");
+require("../../../themes/react-data-grid-checkbox.css");
 
 if (!Object.assign) {
-  Object.assign = require('object-assign');
+  Object.assign = require("object-assign");
 }
 
-const deprecationWarning = (propName, alternative) => `${propName} has been deprecated and will be removed in a future version. Please use ${alternative} instead`;
+const deprecationWarning = (propName, alternative) =>
+  `${propName} has been deprecated and will be removed in a future version. Please use ${alternative} instead`;
 
 /** Main API Component to render a data grid of rows and columns
  *
@@ -33,9 +39,9 @@ const deprecationWarning = (propName, alternative) => `${propName} has been depr
  *   rowGetter={i => rows[i]}
  *   rowsCount={3} />
  * ```
-*/
+ */
 class ReactDataGrid extends React.Component {
-  static displayName = 'ReactDataGrid';
+  static displayName = "ReactDataGrid";
 
   static propTypes = {
     /** The height of each row in pixels */
@@ -49,9 +55,15 @@ class ReactDataGrid extends React.Component {
     /** The minimum width of the grid in pixels */
     minWidth: PropTypes.number,
     /** Deprecated: Legacy prop to turn on row selection. Use rowSelection props instead*/
-    enableRowSelect: deprecate(PropTypes.func, deprecationWarning('enableRowSelect', 'rowSelection')),
+    enableRowSelect: deprecate(
+      PropTypes.func,
+      deprecationWarning("enableRowSelect", "rowSelection")
+    ),
     /** Deprecated: Function called when grid is updated via a cell commit. Use onGridRowsUpdated instead*/
-    onRowUpdated: deprecate(PropTypes.func, deprecationWarning('onRowUpdated', 'onGridRowsUpdated')),
+    onRowUpdated: deprecate(
+      PropTypes.func,
+      deprecationWarning("onRowUpdated", "onGridRowsUpdated")
+    ),
     /** 	A function called for each rendered row that should return a plain key/value pair object */
     rowGetter: PropTypes.func.isRequired,
     /** The number of rows to be rendered */
@@ -61,48 +73,55 @@ class ReactDataGrid extends React.Component {
     /** Used to toggle whether cells can be selected or not */
     enableCellSelect: PropTypes.bool,
     /**
-    * An array of objects representing each column on the grid.
-    * Can also be an ImmutableJS object
-    */
-    columns: PropTypes.arrayOf(PropTypes.shape({
-      /** The name of the column. By default it will be displayed in the header cell */
-      name: PropTypes.node.isRequired,
-      /** A unique key to distinguish each column */
-      key: PropTypes.string.isRequired,
-      /** Column width. If not specified, it will be determined automatically based on grid width and specified widths of other columns*/
-      width: PropTypes.number,
-      /** Enable filtering of a column */
-      filterable: PropTypes.bool,
-      /** Component to be used to filter the data of the column */
-      filterRenderer: PropTypes.node,
-      /** Enable resizing of a column */
-      resizable: PropTypes.bool,
-      /** Enable sorting of a column */
-      sortable: PropTypes.bool,
-      /** Sets the column sort order to be descending instead of ascending the first time the column is sorted */
-      sortDescendingFirst: PropTypes.bool,
-      /** Enable dragging of a column */
-      dragable: PropTypes.bool,
-      /** Enables cell editing. If set and no editor property specified, then a textinput will be used as the cell editor */
-      editable: PropTypes.node,
-      /** Editor to be rendered when cell of column is being edited. If set, then the column is automatically set to be editable */
-      editor: PropTypes.node,
-      /** Formatter to be used to render the cell content */
-      formatter: PropTypes.node,
-      /** Header renderer for each header cell */
-      headerRenderer: PropTypes.node,
-      /** Determines whether column is frozen or not */
-      frozen: PropTypes.bool,
-      /** By adding an event object with callbacks for the native react events you can bind events to a specific column. That will not break the default behaviour of the grid and will run only for the specified column */
-      events: PropTypes.object
-
-    })).isRequired,
+     * An array of objects representing each column on the grid.
+     * Can also be an ImmutableJS object
+     */
+    columns: PropTypes.arrayOf(
+      PropTypes.shape({
+        /** The name of the column. By default it will be displayed in the header cell */
+        name: PropTypes.node.isRequired,
+        /** A unique key to distinguish each column */
+        key: PropTypes.string.isRequired,
+        /** Column width. If not specified, it will be determined automatically based on grid width and specified widths of other columns*/
+        width: PropTypes.number,
+        /** Enable filtering of a column */
+        filterable: PropTypes.bool,
+        /** Component to be used to filter the data of the column */
+        filterRenderer: PropTypes.node,
+        /** Enable resizing of a column */
+        resizable: PropTypes.bool,
+        /** Enable sorting of a column */
+        sortable: PropTypes.bool,
+        /** Sets the column sort order to be descending instead of ascending the first time the column is sorted */
+        sortDescendingFirst: PropTypes.bool,
+        /** Enable dragging of a column */
+        dragable: PropTypes.bool,
+        /** Enables cell editing. If set and no editor property specified, then a textinput will be used as the cell editor */
+        editable: PropTypes.node,
+        /** Editor to be rendered when cell of column is being edited. If set, then the column is automatically set to be editable */
+        editor: PropTypes.node,
+        /** Formatter to be used to render the cell content */
+        formatter: PropTypes.node,
+        /** Header renderer for each header cell */
+        headerRenderer: PropTypes.node,
+        /** Determines whether column is frozen or not */
+        frozen: PropTypes.bool,
+        /** By adding an event object with callbacks for the native react events you can bind events to a specific column. That will not break the default behaviour of the grid and will run only for the specified column */
+        events: PropTypes.object
+      })
+    ).isRequired,
     /** Callback whenever grid is filtered via FilterableHeaderCell*/
     onFilter: PropTypes.func,
     /** Deprecated: Function called when grid is updated via a copy/paste. Use onGridRowsUpdated instead*/
-    onCellCopyPaste: deprecate(PropTypes.func, deprecationWarning('onCellCopyPaste', 'onGridRowsUpdated')),
+    onCellCopyPaste: deprecate(
+      PropTypes.func,
+      deprecationWarning("onCellCopyPaste", "onGridRowsUpdated")
+    ),
     /** Deprecated: Function called when grid is updated via a cell drag. Use onGridRowsUpdated instead*/
-    onCellsDragged: deprecate(PropTypes.func, deprecationWarning('onCellsDragged', 'onGridRowsUpdated')),
+    onCellsDragged: deprecate(
+      PropTypes.func,
+      deprecationWarning("onCellsDragged", "onGridRowsUpdated")
+    ),
     /** Function called on each cell render to render a list of actions for each cell */
     getCellActions: PropTypes.func,
     /**  Callback */
@@ -114,7 +133,10 @@ class ReactDataGrid extends React.Component {
     /** The direction to sort the sortColumn*/
     sortDirection: PropTypes.oneOf(Object.keys(DEFINE_SORT)),
     /** Deprecated: Function called when grid is updated via double clicking the cell drag handle. Use onGridRowsUpdated instead*/
-    onDragHandleDoubleClick: deprecate(PropTypes.func, deprecationWarning('onDragHandleDoubleClick', 'onGridRowsUpdated')),
+    onDragHandleDoubleClick: deprecate(
+      PropTypes.func,
+      deprecationWarning("onDragHandleDoubleClick", "onGridRowsUpdated")
+    ),
     /**
      * Callback called whenever row data is updated
      * When editing is enabled, this callback will be called for the following scenarios
@@ -137,7 +159,7 @@ class ReactDataGrid extends React.Component {
     /** Component used to render a context menu. react-data-grid-addons provides a default context menu which may be used*/
     contextMenu: PropTypes.element,
     /** */
-    cellNavigationMode: PropTypes.oneOf(['none', 'loopOverRow', 'changeRow']),
+    cellNavigationMode: PropTypes.oneOf(["none", "loopOverRow", "changeRow"]),
     /** Function called whenever a cell is selected */
     onCellSelected: PropTypes.func,
     /** Function called whenever a cell is deselected */
@@ -227,7 +249,7 @@ class ReactDataGrid extends React.Component {
     headerFiltersHeight: 45,
     enableRowSelect: false,
     minHeight: 350,
-    rowKey: 'id',
+    rowKey: "id",
     rowScrollTimeout: 0,
     scrollToRowIndex: 0,
     cellNavigationMode: CellNavigationMode.NONE,
@@ -238,7 +260,7 @@ class ReactDataGrid extends React.Component {
       rowsEnd: 2
     },
     enableCellAutoFocus: true,
-    onBeforeEdit: () => { },
+    onBeforeEdit: () => {},
     minColumnWidth: 80,
     columnEquality: ColumnMetrics.sameColumn,
     editorPortalTarget: document.body
@@ -247,7 +269,17 @@ class ReactDataGrid extends React.Component {
   constructor(props, context) {
     super(props, context);
     const columnMetrics = this.createColumnMetrics();
-    const initialState = { columnMetrics, selectedRows: [], expandedRows: [], canFilter: false, columnFilters: {}, sortDirection: null, sortColumn: null, scrollOffset: 0, lastRowIdxUiSelected: -1 };
+    const initialState = {
+      columnMetrics,
+      selectedRows: [],
+      expandedRows: [],
+      canFilter: false,
+      columnFilters: {},
+      sortDirection: null,
+      sortColumn: null,
+      scrollOffset: 0,
+      lastRowIdxUiSelected: -1
+    };
     if (this.props.sortColumn && this.props.sortDirection) {
       initialState.sortColumn = this.props.sortColumn;
       initialState.sortDirection = this.props.sortDirection;
@@ -259,43 +291,65 @@ class ReactDataGrid extends React.Component {
 
   componentDidMount() {
     this._mounted = true;
-    window.addEventListener('resize', this.metricsUpdated);
+    window.addEventListener("resize", this.metricsUpdated);
     if (this.props.cellRangeSelection) {
-      window.addEventListener('mouseup', this.onWindowMouseUp);
+      window.addEventListener("mouseup", this.onWindowMouseUp);
     }
     this.metricsUpdated();
   }
 
   componentWillUnmount() {
     this._mounted = false;
-    window.removeEventListener('resize', this.metricsUpdated);
-    window.removeEventListener('mouseup', this.onWindowMouseUp);
+    window.removeEventListener("resize", this.metricsUpdated);
+    window.removeEventListener("mouseup", this.onWindowMouseUp);
   }
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.columns) {
-      if (!ColumnMetrics.sameColumns(this.props.columns, nextProps.columns, this.props.columnEquality) ||
-        nextProps.minWidth !== this.props.minWidth) {
+      if (
+        !ColumnMetrics.sameColumns(
+          this.props.columns,
+          nextProps.columns,
+          this.props.columnEquality
+        ) ||
+        nextProps.minWidth !== this.props.minWidth
+      ) {
         const columnMetrics = this.createColumnMetrics(nextProps);
         this.setState({ columnMetrics: columnMetrics });
       }
     }
   }
 
+  removeCellSelections = () => {
+    this.eventBus.dispatch(EventTypes.REMOVE_CELL_SELECTIONS);
+  };
+
   selectCell = ({ idx, rowIdx }, openEditor) => {
     this.eventBus.dispatch(EventTypes.SELECT_CELL, { rowIdx, idx }, openEditor);
   };
 
-  selectStart = (cellPosition) => {
+  selectStart = cellPosition => {
     this.eventBus.dispatch(EventTypes.SELECT_START, cellPosition);
   };
 
-  selectUpdate = (cellPosition) => {
+  selectUpdate = cellPosition => {
     this.eventBus.dispatch(EventTypes.SELECT_UPDATE, cellPosition);
   };
 
   selectEnd = () => {
     this.eventBus.dispatch(EventTypes.SELECT_END);
+  };
+
+  stopEditingCurrentCell = () => {
+    this.eventBus.dispatch(EventTypes.STOP_EDITING_CURRENT_CELL);
+  };
+
+  editCurrentCell = () => {
+    this.eventBus.dispatch(EventTypes.EDIT_CURRENT_CELL);
+  };
+
+  editCellAt = (idx, rowIdx) => {
+    this.eventBus.dispatch(EventTypes.SELECT_CELL, { rowIdx, idx }, true);
   };
 
   handleDragEnter = ({ overRowIdx }) => {
@@ -316,7 +370,7 @@ class ReactDataGrid extends React.Component {
     return totalWidth;
   };
 
-  getColumnMetricsType = (metrics) => {
+  getColumnMetricsType = metrics => {
     const totalWidth = metrics.totalWidth || this.getTotalWidth();
     const currentMetrics = {
       columns: metrics.columns,
@@ -327,7 +381,7 @@ class ReactDataGrid extends React.Component {
     return updatedMetrics;
   };
 
-  getColumn = (idx) => {
+  getColumn = idx => {
     const { columns } = this.state.columnMetrics;
     return getColumn(columns, idx);
   };
@@ -352,14 +406,18 @@ class ReactDataGrid extends React.Component {
   };
 
   onColumnResize = (index, width) => {
-    const columnMetrics = ColumnMetrics.resizeColumn(this.state.columnMetrics, index, width);
+    const columnMetrics = ColumnMetrics.resizeColumn(
+      this.state.columnMetrics,
+      index,
+      width
+    );
     this.setState({ columnMetrics });
     if (this.props.onColumnResize) {
       this.props.onColumnResize(index, width);
     }
   };
 
-  onKeyDown = (e) => {
+  onKeyDown = e => {
     // Track which keys are currently down for shift clicking etc
     this._keysDown = this._keysDown || {};
     this._keysDown[e.keyCode] = true;
@@ -370,7 +428,7 @@ class ReactDataGrid extends React.Component {
     }
   };
 
-  onKeyUp = (e) => {
+  onKeyUp = e => {
     // Track which keys are currently down for shift clicking etc
     this._keysDown = this._keysDown || {};
     delete this._keysDown[e.keyCode];
@@ -381,15 +439,17 @@ class ReactDataGrid extends React.Component {
     }
   };
 
-  isSingleKeyDown = (keyCode) => {
+  isSingleKeyDown = keyCode => {
     if (!this._keysDown) return false;
-    return keyCode in this._keysDown && Object.keys(this._keysDown).length === 1;
+    return (
+      keyCode in this._keysDown && Object.keys(this._keysDown).length === 1
+    );
   };
 
   onColumnEvent = (ev, columnEvent) => {
     const { idx, name } = columnEvent;
 
-    if (name && typeof idx !== 'undefined') {
+    if (name && typeof idx !== "undefined") {
       const column = this.getColumn(idx);
 
       if (column && column.events && isFunction(column.events[name])) {
@@ -406,19 +466,28 @@ class ReactDataGrid extends React.Component {
   };
 
   onCellClick = ({ rowIdx, idx }) => {
-    const { onRowClick, rowGetter } = this.props;
-    this.selectCell({ rowIdx, idx });
+    const { cellNavigationMode, onRowClick, rowGetter } = this.props;
+
+    if (
+      cellNavigationMode !== null &&
+      cellNavigationMode === CellNavigationMode.LOOP_OVER_EDITABLE_CELLS
+    ) {
+      this.eventBus.dispatch(EventTypes.EDIT_NEXT_EDITABLE_CELL, {
+        rowIdx,
+        idx
+      });
+    } else this.selectCell({ rowIdx, idx });
 
     if (isFunction(onRowClick)) {
       onRowClick(rowIdx, rowGetter(rowIdx), this.getColumn(idx));
     }
   };
 
-  onCellMouseDown = (cellPosition) => {
+  onCellMouseDown = cellPosition => {
     this.selectStart(cellPosition);
   };
 
-  onCellMouseEnter = (cellPosition) => {
+  onCellMouseEnter = cellPosition => {
     this.selectUpdate(cellPosition);
   };
 
@@ -448,51 +517,62 @@ class ReactDataGrid extends React.Component {
     });
   };
 
-  onDragHandleDoubleClick = (e) => {
+  onDragHandleDoubleClick = e => {
     if (this.props.onDragHandleDoubleClick) {
       this.props.onDragHandleDoubleClick(e);
     }
 
     if (this.props.onGridRowsUpdated) {
       const cellKey = this.getColumn(e.idx).key;
-      this.onGridRowsUpdated(cellKey, e.rowIdx, this.props.rowsCount - 1, { [cellKey]: e.rowData[cellKey] }, UpdateActions.COLUMN_FILL);
+      this.onGridRowsUpdated(
+        cellKey,
+        e.rowIdx,
+        this.props.rowsCount - 1,
+        { [cellKey]: e.rowData[cellKey] },
+        UpdateActions.COLUMN_FILL
+      );
     }
   };
 
-  onCellExpand = (args) => {
+  onCellExpand = args => {
     if (this.props.onCellExpand) {
       this.props.onCellExpand(args);
     }
   };
 
-  onRowExpandToggle = (args) => {
-    if (typeof this.props.onRowExpandToggle === 'function') {
+  onRowExpandToggle = args => {
+    if (typeof this.props.onRowExpandToggle === "function") {
       this.props.onRowExpandToggle(args);
     }
   };
 
   /**
- * onGridRowsUpdated will be called for the following update scenarios
- * - Whenever a single cell is updated
- * - Whenever the value of a cell is copy/pasted to another cell
- * - Whenever multiple cells of a column are updated by dragging the fill handle of another cell
- * - Whenever multiple cells of a column are updated by double clicking the fill handle of another cell
- * @param {object} updated Updated key/value pairs that should be applied to each row to update
- * @param {number} toRow The index of the destination row being to be updated
- * @param {number} toRowId The unique id of the destination row to be updated
- * @param {string} action The action that triggered the update. Can be one of [CELL_UPDATE, COLUMN_FILL, COPY_PASTE, CELL_DRAG]
- * @returns {object} fromRowData The row data of the origin row
- * The following are optional arguments that apply when editing multiple rows or copying from one cell to another
- * @param {array} rowIds The unique id of each row to be updated
- * @param {number} fromRowId The unique id property of the source row
- * @param {number} fromRow The index of the source row
- */
+   * onGridRowsUpdated will be called for the following update scenarios
+   * - Whenever a single cell is updated
+   * - Whenever the value of a cell is copy/pasted to another cell
+   * - Whenever multiple cells of a column are updated by dragging the fill handle of another cell
+   * - Whenever multiple cells of a column are updated by double clicking the fill handle of another cell
+   * @param {object} updated Updated key/value pairs that should be applied to each row to update
+   * @param {number} toRow The index of the destination row being to be updated
+   * @param {number} toRowId The unique id of the destination row to be updated
+   * @param {string} action The action that triggered the update. Can be one of [CELL_UPDATE, COLUMN_FILL, COPY_PASTE, CELL_DRAG]
+   * @returns {object} fromRowData The row data of the origin row
+   * The following are optional arguments that apply when editing multiple rows or copying from one cell to another
+   * @param {array} rowIds The unique id of each row to be updated
+   * @param {number} fromRowId The unique id property of the source row
+   * @param {number} fromRow The index of the source row
+   */
   onGridRowsUpdated = (cellKey, fromRow, toRow, updated, action, originRow) => {
     const { rowGetter, rowKey, onGridRowsUpdated } = this.props;
     // Deprecated prop
     // to be removed in next major release
     if (isFunction(this.props.onRowUpdated)) {
-      this.props.onRowUpdated({ updated, rowIdx: fromRow, cellKey, value: updated[cellKey] });
+      this.props.onRowUpdated({
+        updated,
+        rowIdx: fromRow,
+        cellKey,
+        value: updated[cellKey]
+      });
     }
     if (!isFunction(onGridRowsUpdated)) {
       return;
@@ -503,22 +583,40 @@ class ReactDataGrid extends React.Component {
       rowIds.push(rowGetter(i)[rowKey]);
     }
 
-    const fromRowData = rowGetter(action === UpdateActions.COPY_PASTE ? originRow : fromRow);
+    const fromRowData = rowGetter(
+      action === UpdateActions.COPY_PASTE ? originRow : fromRow
+    );
     const fromRowId = fromRowData[rowKey];
     const toRowId = rowGetter(toRow)[rowKey];
-    onGridRowsUpdated({ cellKey, fromRow, toRow, fromRowId, toRowId, rowIds, updated, action, fromRowData });
+    onGridRowsUpdated({
+      cellKey,
+      fromRow,
+      toRow,
+      fromRowId,
+      toRowId,
+      rowIds,
+      updated,
+      action,
+      fromRowData
+    });
   };
 
-  onCommit = (commit) => {
+  onCommit = commit => {
     const targetRow = commit.rowIdx;
-    this.onGridRowsUpdated(commit.cellKey, targetRow, targetRow, commit.updated, UpdateActions.CELL_UPDATE);
+    this.onGridRowsUpdated(
+      commit.cellKey,
+      targetRow,
+      targetRow,
+      commit.updated,
+      UpdateActions.CELL_UPDATE
+    );
   };
 
-  onScroll = (scrollState) => {
+  onScroll = scrollState => {
     if (isFunction(this.props.onScroll)) {
       this.props.onScroll(scrollState);
     }
-  }
+  };
 
   handleSort = (columnKey, direction) => {
     this.setState({ sortDirection: direction, sortColumn: columnKey }, () => {
@@ -543,10 +641,19 @@ class ReactDataGrid extends React.Component {
   };
 
   // return false if not a shift select so can be handled as normal row selection
-  handleShiftSelect = (rowIdx) => {
-    if (this.state.lastRowIdxUiSelected > -1 && this.isSingleKeyDown(KeyCodes.Shift)) {
+  handleShiftSelect = rowIdx => {
+    if (
+      this.state.lastRowIdxUiSelected > -1 &&
+      this.isSingleKeyDown(KeyCodes.Shift)
+    ) {
       const { keys, indexes, isSelectedKey } = this.props.rowSelection.selectBy;
-      const isPreviouslySelected = RowUtils.isRowSelected(keys, indexes, isSelectedKey, this.props.rowGetter(rowIdx), rowIdx);
+      const isPreviouslySelected = RowUtils.isRowSelected(
+        keys,
+        indexes,
+        isSelectedKey,
+        this.props.rowGetter(rowIdx),
+        rowIdx
+      );
 
       if (isPreviouslySelected) return false;
 
@@ -559,7 +666,7 @@ class ReactDataGrid extends React.Component {
           rowsSelected.push({ rowIdx: i, row: this.props.rowGetter(i) });
         }
 
-        if (typeof this.props.rowSelection.onRowsSelected === 'function') {
+        if (typeof this.props.rowSelection.onRowsSelected === "function") {
           this.props.rowSelection.onRowsSelected(rowsSelected);
         }
 
@@ -571,7 +678,7 @@ class ReactDataGrid extends React.Component {
           rowsSelected.push({ rowIdx: i, row: this.props.rowGetter(i) });
         }
 
-        if (typeof this.props.rowSelection.onRowsSelected === 'function') {
+        if (typeof this.props.rowSelection.onRowsSelected === "function") {
           this.props.rowSelection.onRowsSelected(rowsSelected);
         }
 
@@ -594,13 +701,28 @@ class ReactDataGrid extends React.Component {
     }
 
     const { keys, indexes, isSelectedKey } = this.props.rowSelection.selectBy;
-    const isPreviouslySelected = RowUtils.isRowSelected(keys, indexes, isSelectedKey, rowData, rowIdx);
+    const isPreviouslySelected = RowUtils.isRowSelected(
+      keys,
+      indexes,
+      isSelectedKey,
+      rowData,
+      rowIdx
+    );
 
-    this.setState({ lastRowIdxUiSelected: isPreviouslySelected ? -1 : rowIdx, selected: { rowIdx: rowIdx, idx: 0 } });
+    this.setState({
+      lastRowIdxUiSelected: isPreviouslySelected ? -1 : rowIdx,
+      selected: { rowIdx: rowIdx, idx: 0 }
+    });
 
-    if (isPreviouslySelected && typeof this.props.rowSelection.onRowsDeselected === 'function') {
+    if (
+      isPreviouslySelected &&
+      typeof this.props.rowSelection.onRowsDeselected === "function"
+    ) {
       this.props.rowSelection.onRowsDeselected([{ rowIdx, row: rowData }]);
-    } else if (!isPreviouslySelected && typeof this.props.rowSelection.onRowsSelected === 'function') {
+    } else if (
+      !isPreviouslySelected &&
+      typeof this.props.rowSelection.onRowsSelected === "function"
+    ) {
       this.props.rowSelection.onRowsSelected([{ rowIdx, row: rowData }]);
     }
   };
@@ -618,25 +740,38 @@ class ReactDataGrid extends React.Component {
       } else {
         this.handleNewRowSelect(rowIdx, rowData);
       }
-    } else { // Fallback to old onRowSelect handler
-      const selectedRows = this.props.enableRowSelect === 'single' ? [] : this.state.selectedRows.slice(0);
-      const selectedRow = this.getSelectedRow(selectedRows, rowData[this.props.rowKey]);
+    } else {
+      // Fallback to old onRowSelect handler
+      const selectedRows =
+        this.props.enableRowSelect === "single"
+          ? []
+          : this.state.selectedRows.slice(0);
+      const selectedRow = this.getSelectedRow(
+        selectedRows,
+        rowData[this.props.rowKey]
+      );
       if (selectedRow) {
         selectedRow.isSelected = !selectedRow.isSelected;
       } else {
         rowData.isSelected = true;
         selectedRows.push(rowData);
       }
-      this.setState({ selectedRows: selectedRows, selected: { rowIdx: rowIdx, idx: 0 } });
+      this.setState({
+        selectedRows: selectedRows,
+        selected: { rowIdx: rowIdx, idx: 0 }
+      });
       if (this.props.onRowSelect) {
         this.props.onRowSelect(selectedRows.filter(r => r.isSelected === true));
       }
     }
   };
 
-  handleCheckboxChange = (e) => {
+  handleCheckboxChange = e => {
     let allRowsSelected;
-    if (e.currentTarget instanceof HTMLInputElement && e.currentTarget.checked === true) {
+    if (
+      e.currentTarget instanceof HTMLInputElement &&
+      e.currentTarget.checked === true
+    ) {
       allRowsSelected = true;
     } else {
       allRowsSelected = false;
@@ -644,11 +779,16 @@ class ReactDataGrid extends React.Component {
     if (this.useNewRowSelection()) {
       const { keys, indexes, isSelectedKey } = this.props.rowSelection.selectBy;
 
-      if (allRowsSelected && typeof this.props.rowSelection.onRowsSelected === 'function') {
+      if (
+        allRowsSelected &&
+        typeof this.props.rowSelection.onRowsSelected === "function"
+      ) {
         const selectedRows = [];
         for (let i = 0; i < this.props.rowsCount; i++) {
           const rowData = this.props.rowGetter(i);
-          if (!RowUtils.isRowSelected(keys, indexes, isSelectedKey, rowData, i)) {
+          if (
+            !RowUtils.isRowSelected(keys, indexes, isSelectedKey, rowData, i)
+          ) {
             selectedRows.push({ rowIdx: i, row: rowData });
           }
         }
@@ -656,11 +796,16 @@ class ReactDataGrid extends React.Component {
         if (selectedRows.length > 0) {
           this.props.rowSelection.onRowsSelected(selectedRows);
         }
-      } else if (!allRowsSelected && typeof this.props.rowSelection.onRowsDeselected === 'function') {
+      } else if (
+        !allRowsSelected &&
+        typeof this.props.rowSelection.onRowsDeselected === "function"
+      ) {
         const deselectedRows = [];
         for (let i = 0; i < this.props.rowsCount; i++) {
           const rowData = this.props.rowGetter(i);
-          if (RowUtils.isRowSelected(keys, indexes, isSelectedKey, rowData, i)) {
+          if (
+            RowUtils.isRowSelected(keys, indexes, isSelectedKey, rowData, i)
+          ) {
             deselectedRows.push({ rowIdx: i, row: rowData });
           }
         }
@@ -672,11 +817,13 @@ class ReactDataGrid extends React.Component {
     } else {
       const selectedRows = [];
       for (let i = 0; i < this.props.rowsCount; i++) {
-        const row = Object.assign({}, this.props.rowGetter(i), { isSelected: allRowsSelected });
+        const row = Object.assign({}, this.props.rowGetter(i), {
+          isSelected: allRowsSelected
+        });
         selectedRows.push(row);
       }
       this.setState({ selectedRows: selectedRows });
-      if (typeof this.props.onRowSelect === 'function') {
+      if (typeof this.props.onRowSelect === "function") {
         this.props.onRowSelect(selectedRows.filter(r => r.isSelected === true));
       }
     }
@@ -684,12 +831,19 @@ class ReactDataGrid extends React.Component {
 
   getRowOffsetHeight = () => {
     let offsetHeight = 0;
-    this.getHeaderRows().forEach((row) => offsetHeight += parseFloat(row.height, 10));
+    this.getHeaderRows().forEach(
+      row => (offsetHeight += parseFloat(row.height, 10))
+    );
     return offsetHeight;
   };
 
   getHeaderRows = () => {
-    const rows = [{ height: this.props.headerRowHeight || this.props.rowHeight, rowType: HeaderRowType.HEADER }];
+    const rows = [
+      {
+        height: this.props.headerRowHeight || this.props.rowHeight,
+        rowType: HeaderRowType.HEADER
+      }
+    ];
     if (this.state.canFilter === true) {
       rows.push({
         filterable: true,
@@ -733,7 +887,7 @@ class ReactDataGrid extends React.Component {
     this.selectCell({ rowIdx, idx }, true);
   };
 
-  scrollToColumn = (colIdx) => {
+  scrollToColumn = colIdx => {
     this.eventBus.dispatch(EventTypes.SCROLL_TO_COLUMN, colIdx);
   };
 
@@ -747,22 +901,34 @@ class ReactDataGrid extends React.Component {
 
     let cols = columns.slice(0);
     let unshiftedCols = {};
-    if (this.props.rowActionsCell || (props.enableRowSelect && !this.props.rowSelection) || (props.rowSelection && props.rowSelection.showCheckbox !== false)) {
+    if (
+      this.props.rowActionsCell ||
+      (props.enableRowSelect && !this.props.rowSelection) ||
+      (props.rowSelection && props.rowSelection.showCheckbox !== false)
+    ) {
       const SelectAllComponent = this.props.selectAllRenderer || SelectAll;
-      const SelectAllRenderer = <SelectAllComponent onChange={this.handleCheckboxChange} inputRef={grid => this.selectAllCheckbox = grid} />;
-      const headerRenderer = props.enableRowSelect === 'single' ? null : SelectAllRenderer;
-      const Formatter = this.props.rowActionsCell ? this.props.rowActionsCell : CheckboxEditor;
+      const SelectAllRenderer = (
+        <SelectAllComponent
+          onChange={this.handleCheckboxChange}
+          inputRef={grid => (this.selectAllCheckbox = grid)}
+        />
+      );
+      const headerRenderer =
+        props.enableRowSelect === "single" ? null : SelectAllRenderer;
+      const Formatter = this.props.rowActionsCell
+        ? this.props.rowActionsCell
+        : CheckboxEditor;
       const selectColumn = {
-        key: 'select-row',
-        name: '',
+        key: "select-row",
+        name: "",
         formatter: <Formatter rowSelection={this.props.rowSelection} />,
         onCellChange: this.handleRowSelect,
         filterable: false,
         headerRenderer: headerRenderer,
         width: 60,
         frozen: true,
-        getRowMetaData: (rowData) => rowData,
-        cellClass: this.props.rowActionsCell ? 'rdg-row-actions-cell' : ''
+        getRowMetaData: rowData => rowData,
+        cellClass: this.props.rowActionsCell ? "rdg-row-actions-cell" : ""
       };
       unshiftedCols = cols.unshift(selectColumn);
       cols = unshiftedCols > 0 ? cols : unshiftedCols;
@@ -772,19 +938,23 @@ class ReactDataGrid extends React.Component {
     return this._cachedComputedColumns;
   };
 
-  setGridRef = (grid) => {
+  setGridRef = grid => {
     this.grid = grid;
   };
 
-  setBaseGridRef = (base) => {
+  setBaseGridRef = base => {
     this.base = base;
   };
 
   renderToolbar = () => {
     const Toolbar = this.props.toolbar;
-    const toolBarProps = { columns: this.props.columns, onToggleFilter: this.onToggleFilter, numberOfRows: this.props.rowsCount };
+    const toolBarProps = {
+      columns: this.props.columns,
+      onToggleFilter: this.onToggleFilter,
+      numberOfRows: this.props.rowsCount
+    };
     if (React.isValidElement(Toolbar)) {
-      return (React.cloneElement(Toolbar, toolBarProps));
+      return React.cloneElement(Toolbar, toolBarProps);
     } else if (isFunction(Toolbar)) {
       return <Toolbar {...toolBarProps} />;
     }
@@ -816,15 +986,26 @@ class ReactDataGrid extends React.Component {
     // depending on the current lifecycle stage, gridWidth() may not initialize correctly
     // this also handles cases where it always returns undefined -- such as when inside a div with display:none
     // eg Bootstrap tabs and collapses
-    if (typeof containerWidth === 'undefined' || isNaN(containerWidth) || containerWidth === 0) {
-      containerWidth = '100%';
+    if (
+      typeof containerWidth === "undefined" ||
+      isNaN(containerWidth) ||
+      containerWidth === 0
+    ) {
+      containerWidth = "100%";
     }
-    if (typeof gridWidth === 'undefined' || isNaN(gridWidth) || gridWidth === 0) {
-      gridWidth = '100%';
+    if (
+      typeof gridWidth === "undefined" ||
+      isNaN(gridWidth) ||
+      gridWidth === 0
+    ) {
+      gridWidth = "100%";
     }
     return (
-      <div className="react-grid-Container" style={{ width: containerWidth }}
-        ref={this.setGridRef}>
+      <div
+        className="react-grid-Container"
+        style={{ width: containerWidth }}
+        ref={this.setGridRef}
+      >
         {toolbar}
         <div className="react-grid-Main">
           <BaseGrid
@@ -863,9 +1044,18 @@ class ReactDataGrid extends React.Component {
             onDragHandleDoubleClick={this.onDragHandleDoubleClick}
             onCellSelected={this.props.onCellSelected}
             onCellDeSelected={this.props.onCellDeSelected}
-            onCellRangeSelectionStarted={this.props.cellRangeSelection && this.props.cellRangeSelection.onStart}
-            onCellRangeSelectionUpdated={this.props.cellRangeSelection && this.props.cellRangeSelection.onUpdate}
-            onCellRangeSelectionCompleted={this.props.cellRangeSelection && this.props.cellRangeSelection.onComplete}
+            onCellRangeSelectionStarted={
+              this.props.cellRangeSelection &&
+              this.props.cellRangeSelection.onStart
+            }
+            onCellRangeSelectionUpdated={
+              this.props.cellRangeSelection &&
+              this.props.cellRangeSelection.onUpdate
+            }
+            onCellRangeSelectionCompleted={
+              this.props.cellRangeSelection &&
+              this.props.cellRangeSelection.onComplete
+            }
             onCommit={this.onCommit}
             onScroll={this.onScroll}
             editorPortalTarget={this.props.editorPortalTarget}
